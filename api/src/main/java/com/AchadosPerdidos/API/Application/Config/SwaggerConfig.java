@@ -13,175 +13,81 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Logger;
 
 @Configuration
 public class SwaggerConfig {
-
-    private static final Logger logger = Logger.getLogger(SwaggerConfig.class.getName());
 
     private final EnvironmentConfig environmentConfig;
 
     @Value("${SWAGGER_SERVER_URL:}")
     private String swaggerServerUrl;
 
-    @Value("${SWAGGER_SERVER_DESCRIPTION:}")
-    private String swaggerServerDescription;
-
     public SwaggerConfig(EnvironmentConfig environmentConfig) {
         this.environmentConfig = environmentConfig;
     }
 
     @Bean
-    public OpenAPI customOpenAPI() {
-        // Define explicitamente o servidor para ignorar cabeçalhos do proxy DigitalOcean
-        String serverUrlValue = getServerUrl();
-        String serverDescriptionValue = getServerDescription();
-        
-        // Log único e essencial
-        logger.info(String.format("Swagger configurado - URL: %s | Descrição: %s", serverUrlValue, serverDescriptionValue));
-        
-        // Verifica se está em produção para decidir se mostra múltiplos servidores
-        boolean isProduction = environmentConfig.isProduction();
-        
-        List<Server> servers;
-        if (isProduction) {
-            // Em produção: mostra apenas o servidor de produção
-            servers = List.of(
-                    new Server()
-                            .url(serverUrlValue)
-                            .description(serverDescriptionValue)
-            );
-        } else {
-            // Em desenvolvimento: mostra ambos os servidores para facilitar testes
-            servers = List.of(
-                    new Server()
-                            .url(serverUrlValue)
-                            .description(serverDescriptionValue),
-                    new Server()
-                            .url("https://api-achadosperdidos.com.br")
-                            .description("Producao (para testes)")
-            );
-        }
-        
+    public OpenAPI openAPI() {
         return new OpenAPI()
                 .info(apiInfo())
-                .servers(servers)
-                .addSecurityItem(new SecurityRequirement().addList("Bearer Authentication"))
+                .servers(List.of(buildServer()))
+                .addSecurityItem(new SecurityRequirement().addList("BearerAuth"))
                 .components(new Components()
-                        .addSecuritySchemes("Bearer Authentication", createAPIKeyScheme()));
+                        .addSecuritySchemes("BearerAuth", jwtScheme()));
     }
 
     @Bean
     public GroupedOpenApi publicApi() {
         return GroupedOpenApi.builder()
-                .group("api-achados-perdidos")
+                .group("api")
                 .pathsToMatch("/api/**")
                 .packagesToScan("com.AchadosPerdidos.API.Presentation.Controller")
                 .build();
     }
 
-    private String getServerUrl() {
-        // PRIORIDADE 1: Propriedade do arquivo de configuração (tem prioridade máxima)
-        if (swaggerServerUrl != null && !swaggerServerUrl.isEmpty()) {
-            return swaggerServerUrl;
-        }
-        
-        // PRIORIDADE 2: Verifica os perfis ativos usando utilitário centralizado
-        boolean isProduction = environmentConfig.isProduction();
-        boolean isDevelopment = environmentConfig.isDevelopment();
-        
-        // Lógica de decisão baseada nos perfis
-        if (isProduction) {
-            // Fallback robusto: verifica variável de ambiente DIGITALOCEAN_APP_DOMAIN
-            String digitalOceanDomain = System.getenv("DIGITALOCEAN_APP_DOMAIN");
-            if (digitalOceanDomain != null && !digitalOceanDomain.isEmpty()) {
-                // Remove protocolo se já estiver presente
-                String domain = digitalOceanDomain.replaceFirst("^https?://", "");
-                return "https://" + domain;
-            }
-            // Domínio padrão de produção
-            return "https://api-achadosperdidos.com.br";
-        }
-        
-        if (isDevelopment) {
-            return "http://localhost:8080";
-        }
-        
-        // Se não encontrou nenhum perfil conhecido, verifica os perfis padrão
-        String[] defaultProfiles = environmentConfig.getEnvironment().getDefaultProfiles();
-        boolean isDefaultProduction = Arrays.stream(defaultProfiles)
-                .anyMatch(profile -> profile.equalsIgnoreCase("prd"));
-        
-        if (isDefaultProduction) {
-            // Fallback robusto para perfis padrão também
-            String digitalOceanDomain = System.getenv("DIGITALOCEAN_APP_DOMAIN");
-            if (digitalOceanDomain != null && !digitalOceanDomain.isEmpty()) {
-                String domain = digitalOceanDomain.replaceFirst("^https?://", "");
-                return "https://" + domain;
-            }
-            return "https://api-achadosperdidos.com.br";
-        }
-        
-        // TRATAMENTO DE ERRO: Nenhum perfil identificado
-        logger.severe("ERRO: Nenhum perfil válido identificado!");
-        logger.severe(String.format("Perfis ativos: %s", Arrays.toString(environmentConfig.getActiveProfiles())));
-        logger.severe(String.format("Perfis padrão: %s", Arrays.toString(environmentConfig.getEnvironment().getDefaultProfiles())));
-        
-        // Fallback final: tenta usar domínio da DigitalOcean se disponível
-        String digitalOceanDomain = System.getenv("DIGITALOCEAN_APP_DOMAIN");
-        if (digitalOceanDomain != null && !digitalOceanDomain.isEmpty()) {
-            String domain = digitalOceanDomain.replaceFirst("^https?://", "");
-            logger.warning(String.format("Usando domínio DigitalOcean como fallback: %s", domain));
-            return "https://" + domain;
-        }
-        
-        // Fallback seguro: assume desenvolvimento
-        logger.warning("Usando localhost como fallback (pode estar incorreto!)");
-        return "http://localhost:8080";
+    // ===================== helpers =====================
+
+    private Server buildServer() {
+        return new Server()
+                .url(resolveServerUrl())
+                .description(environmentConfig.isProduction()
+                        ? "Servidor de Produção"
+                        : "Servidor de Desenvolvimento");
     }
 
-    private String getServerDescription() {
-        // PRIORIDADE 1: Propriedade do arquivo de configuração
-        if (swaggerServerDescription != null && !swaggerServerDescription.isEmpty()) {
-            return swaggerServerDescription;
+    private String resolveServerUrl() {
+        if (!swaggerServerUrl.isBlank()) {
+            return swaggerServerUrl;
         }
-        
-        // PRIORIDADE 2: Baseado nos perfis ativos usando utilitário centralizado
-        if (environmentConfig.isProduction()) {
-            return "Servidor de PRD";
+
+        String doDomain = System.getenv("DIGITALOCEAN_APP_DOMAIN");
+        if (doDomain != null && !doDomain.isBlank()) {
+            return doDomain.startsWith("http") ? doDomain : "https://" + doDomain;
         }
-        
-        if (environmentConfig.isDevelopment()) {
-            return "Servidor de Desenvolvimento";
-        }
-        
-        // Fallback
-        return "Servidor (perfil não identificado)";
+
+        return environmentConfig.isProduction()
+                ? "https://api-achadosperdidos.com.br"
+                : "http://localhost:8080";
     }
 
     private Info apiInfo() {
         return new Info()
                 .title("API Achados e Perdidos")
-                .description("API para sistema de achados e perdidos com chat em tempo real")
                 .version("1.0.0")
+                .description("API para sistema de achados e perdidos")
                 .contact(new Contact()
                         .name("Equipe de Desenvolvimento")
-                        .email("contato@achadosperdidos.com.br")
-                        .url("https://api-achadosperdidos.com.br"))
+                        .email("contato@achadosperdidos.com.br"))
                 .license(new License()
-                        .name("MIT License")
+                        .name("MIT")
                         .url("https://opensource.org/licenses/MIT"));
     }
 
-    private SecurityScheme createAPIKeyScheme() {
+    private SecurityScheme jwtScheme() {
         return new SecurityScheme()
                 .type(SecurityScheme.Type.HTTP)
-                .bearerFormat("JWT")
                 .scheme("bearer")
-                .description("Insira o token JWT no formato: Bearer {token}");
+                .bearerFormat("JWT");
     }
 }
-

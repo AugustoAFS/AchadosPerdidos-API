@@ -3,11 +3,9 @@ package com.AchadosPerdidos.API.Application.Config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
-import org.springframework.util.StringUtils;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
-import org.springframework.lang.NonNull;
 
 @Configuration
 @EnableWebSocketMessageBroker
@@ -20,7 +18,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     private String allowedOrigins;
 
     @Value("${WS_APP_DEST_PREFIX:/app}")
-    private String appDestinationPrefix;
+    private String appPrefix;
 
     @Value("${WS_BROKER_PREFIX:/topic}")
     private String brokerPrefix;
@@ -29,26 +27,25 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     private boolean enableSockJs;
 
     @Override
-    public void configureMessageBroker(@NonNull MessageBrokerRegistry config) {
-        config.enableSimpleBroker(brokerPrefix);
-        config.setApplicationDestinationPrefixes(appDestinationPrefix);
+    public void configureMessageBroker(MessageBrokerRegistry registry) {
+        registry.enableSimpleBroker(brokerPrefix);
+        registry.setApplicationDestinationPrefixes(appPrefix);
     }
 
     @Override
-    public void registerStompEndpoints(@NonNull StompEndpointRegistry registry) {
-        var endpointRegistration = registry.addEndpoint(endpoint)
-                .setAllowedOriginPatterns(resolveAllowedOrigins());
+    public void registerStompEndpoints(StompEndpointRegistry registry) {
+        var endpointRegistration = registry
+                .addEndpoint(endpoint)
+                .setAllowedOriginPatterns(parse(allowedOrigins));
 
         if (enableSockJs) {
             endpointRegistration.withSockJS();
         }
     }
 
-    @NonNull
-    private String[] resolveAllowedOrigins() {
-        if (!StringUtils.hasText(allowedOrigins)) {
-            return new String[]{"*"};
-        }
-        return StringUtils.commaDelimitedListToStringArray(allowedOrigins);
+    private String[] parse(String value) {
+        return value == null || value.isBlank()
+                ? new String[]{"*"}
+                : value.split(",");
     }
 }

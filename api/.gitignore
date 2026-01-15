@@ -39,12 +39,10 @@ build/
 
 ### Environment Variables ###
 .env
-.env.local
-.env.*.local
-config.env
-*.env
-setup-env.ps1
-setup-env.bat
+.env.dev
+
+# Permite arquivos .example (templates sem credenciais)
+!.env.*.example
 ### IDE ###
 *.swp
 *.swo

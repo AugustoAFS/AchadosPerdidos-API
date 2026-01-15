@@ -39,19 +39,10 @@ public class S3Service {
         this.bucketName = bucketName;
     }
 
-    /**
-     * Faz upload de um arquivo para o S3
-     * @param fileContent Conteúdo do arquivo em bytes
-     * @param fileName Nome original do arquivo
-     * @param contentType Tipo MIME do arquivo
-     * @param folder Pasta no S3 (opcional)
-     * @return URL do arquivo no S3
-     */
     public String uploadFile(byte[] fileContent, String fileName, String contentType, String folder) {
         try {
             validateBucketConfiguration();
 
-            // Gerar chave única para o arquivo
             String timestamp = LocalDateTime.now().format(TIMESTAMP_FORMATTER);
             String uniqueId = UUID.randomUUID().toString();
             String fileExtension = getFileExtension(fileName);
@@ -92,16 +83,6 @@ public class S3Service {
         }
     }
 
-    /**
-     * Faz upload de uma foto específica
-     * @param fileContent Conteúdo do arquivo em bytes
-     * @param fileName Nome original do arquivo
-     * @param contentType Tipo MIME do arquivo
-     * @param userId ID do usuário
-     * @param itemId ID do item (opcional)
-     * @param isProfilePhoto Se é foto de perfil
-     * @return Objeto com informações do upload
-     */
     public S3UploadResult uploadPhoto(byte[] fileContent, String fileName, String contentType, 
                                     Integer userId, Integer itemId, boolean isProfilePhoto) {
         try {
@@ -123,11 +104,6 @@ public class S3Service {
         }
     }
 
-    /**
-     * Baixa um arquivo do S3
-     * @param s3Key Chave do arquivo no S3
-     * @return Conteúdo do arquivo
-     */
     public byte[] downloadFile(String s3Key) {
         try {
             validateBucketConfiguration();
@@ -143,11 +119,6 @@ public class S3Service {
         }
     }
 
-    /**
-     * Verifica se um arquivo existe no S3
-     * @param s3Key Chave do arquivo no S3
-     * @return true se o arquivo existe
-     */
     public boolean fileExists(String s3Key) {
         try {
             validateBucketConfiguration();
@@ -165,11 +136,6 @@ public class S3Service {
         }
     }
 
-    /**
-     * Deleta um arquivo do S3
-     * @param s3Key Chave do arquivo no S3
-     * @return true se o arquivo foi deletado com sucesso
-     */
     public boolean deleteFile(String s3Key) {
         try {
             validateBucketConfiguration();
@@ -185,21 +151,10 @@ public class S3Service {
         }
     }
 
-    /**
-     * Gera URL pública do arquivo
-     * @param s3Key Chave do arquivo no S3
-     * @return URL pública
-     */
     private String generateFileUrl(String s3Key) {
         return String.format("https://%s.s3.amazonaws.com/%s", bucketName, s3Key);
     }
 
-    /**
-     * Gera uma Signed URL temporária para acesso ao arquivo no S3
-     * @param s3Key Chave do arquivo no S3
-     * @param expirationMinutes Tempo de expiração em minutos (padrão: 60 minutos)
-     * @return URL assinada temporária
-     */
     public String generateSignedUrl(String s3Key, int expirationMinutes) {
         try {
             validateBucketConfiguration();
@@ -227,25 +182,14 @@ public class S3Service {
 
         } catch (Exception e) {
             logger.error("Erro ao gerar Signed URL para chave {}: {}", s3Key, e.getMessage(), e);
-            // Em caso de erro, retorna null para que o mapper possa usar a URL do banco como fallback
             return null;
         }
     }
 
-    /**
-     * Gera uma Signed URL temporária para acesso ao arquivo no S3 (expiração padrão: 1 hora)
-     * @param s3Key Chave do arquivo no S3
-     * @return URL assinada temporária
-     */
     public String generateSignedUrl(String s3Key) {
-        return generateSignedUrl(s3Key, 60); // Padrão: 1 hora
+        return generateSignedUrl(s3Key, 60);
     }
 
-    /**
-     * Extrai extensão do arquivo
-     * @param fileName Nome do arquivo
-     * @return Extensão do arquivo
-     */
     private String getFileExtension(String fileName) {
         int lastDotIndex = fileName.lastIndexOf('.');
         return lastDotIndex > 0 ? fileName.substring(lastDotIndex) : "";
@@ -261,41 +205,5 @@ public class S3Service {
             );
         }
         logger.debug("Bucket S3 configurado: {}", bucketName);
-    }
-
-    /**
-     * Classe para retornar resultado do upload
-     */
-    public static class S3UploadResult {
-        private final String s3Key;
-        private final String fileUrl;
-        private final String originalName;
-        private final String contentType;
-        private final Long fileSize;
-        private final Integer userId;
-        private final Integer itemId;
-        private final boolean isProfilePhoto;
-
-        public S3UploadResult(String s3Key, String fileUrl, String originalName, String contentType, 
-                             Long fileSize, Integer userId, Integer itemId, boolean isProfilePhoto) {
-            this.s3Key = s3Key;
-            this.fileUrl = fileUrl;
-            this.originalName = originalName;
-            this.contentType = contentType;
-            this.fileSize = fileSize;
-            this.userId = userId;
-            this.itemId = itemId;
-            this.isProfilePhoto = isProfilePhoto;
-        }
-
-        // Getters
-        public String getS3Key() { return s3Key; }
-        public String getFileUrl() { return fileUrl; }
-        public String getOriginalName() { return originalName; }
-        public String getContentType() { return contentType; }
-        public Long getFileSize() { return fileSize; }
-        public Integer getUserId() { return userId; }
-        public Integer getItemId() { return itemId; }
-        public boolean isProfilePhoto() { return isProfilePhoto; }
     }
 }

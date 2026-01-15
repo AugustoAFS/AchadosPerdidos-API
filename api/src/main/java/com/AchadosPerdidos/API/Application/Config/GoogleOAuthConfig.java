@@ -22,10 +22,9 @@ public class GoogleOAuthConfig {
     @Value("${GOOGLE_AUTH_REDIRECT_URI}")
     private String redirectUri;
 
-
     @Bean
     public ClientRegistrationRepository clientRegistrationRepository() {
-        return new InMemoryClientRegistrationRepository(this.googleClientRegistration());
+        return new InMemoryClientRegistrationRepository(googleClientRegistration());
     }
 
     private ClientRegistration googleClientRegistration() {
@@ -44,4 +43,3 @@ public class GoogleOAuthConfig {
                 .build();
     }
 }
-
