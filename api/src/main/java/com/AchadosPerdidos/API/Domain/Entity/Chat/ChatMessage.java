@@ -1,112 +1,34 @@
 package com.AchadosPerdidos.API.Domain.Entity.Chat;
 
-import com.AchadosPerdidos.API.Domain.Enum.Tipo_Menssagem;
-import com.AchadosPerdidos.API.Domain.Enum.Status_Menssagem;
+import com.AchadosPerdidos.API.Domain.Enum.Status_Message;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
+
 import java.time.LocalDateTime;
 
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Document(collection = "chat_messages")
 public class ChatMessage {
+
     @Id
     private String id;
-    
-    @Field("id_Chat")
-    private String Id_Chat;
-    
-    @Field("id_Usuario_Remetente")
-    private String Id_Usuario_Remetente;
-    
-    @Field("id_Usuario_Destino")
-    private String Id_Usuario_Destino;
-    
-    @Field("menssagem")
-    private String Menssagem;
-    
-    @Field("data_Hora_Menssagem")
-    private LocalDateTime Data_Hora_Menssagem;
-    
-    @Field("status")
-    private Status_Menssagem Status;
-    
-    @Field("tipo")
-    private Tipo_Menssagem Tipo;
+    @Field("chat_id")
+    private String chatId;
+    @Field("sender_id")
+    private Integer senderId;
+    private String content;
+    @Field("created_at")
+    private LocalDateTime createdAt;
+    private Status_Message status;
 
-    public ChatMessage() {}
-
-    public ChatMessage(String id_Chat, String id_Usuario_Remetente, String id_Usuario_Destino,
-                      String menssagem, Tipo_Menssagem tipo, Status_Menssagem status) {
-        this.Id_Chat = id_Chat;
-        this.Id_Usuario_Remetente = id_Usuario_Remetente;
-        this.Id_Usuario_Destino = id_Usuario_Destino;
-        this.Menssagem = menssagem;
-        this.Tipo = tipo;
-        this.Status = status;
-        this.Data_Hora_Menssagem = LocalDateTime.now();
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getId_Chat() {
-        return Id_Chat;
-    }
-
-    public void setId_Chat(String id_Chat) {
-        this.Id_Chat = id_Chat;
-    }
-
-    public String getId_Usuario_Remetente() {
-        return Id_Usuario_Remetente;
-    }
-
-    public void setId_Usuario_Remetente(String id_Usuario_Remetente) {
-        this.Id_Usuario_Remetente = id_Usuario_Remetente;
-    }
-
-    public String getId_Usuario_Destino() {
-        return Id_Usuario_Destino;
-    }
-
-    public void setId_Usuario_Destino(String id_Usuario_Destino) {
-        this.Id_Usuario_Destino = id_Usuario_Destino;
-    }
-
-    public String getMenssagem() {
-        return Menssagem;
-    }
-
-    public void setMenssagem(String menssagem) {
-        this.Menssagem = menssagem;
-    }
-
-    public LocalDateTime getData_Hora_Menssagem() {
-        return Data_Hora_Menssagem;
-    }
-
-    public void setData_Hora_Menssagem(LocalDateTime data_Hora_Menssagem) {
-        this.Data_Hora_Menssagem = data_Hora_Menssagem;
-    }
-
-    public Status_Menssagem getStatus() {
-        return Status;
-    }
-
-    public void setStatus(Status_Menssagem status) {
-        this.Status = status;
-    }
-
-    public Tipo_Menssagem getTipo() {
-        return Tipo;
-    }
-
-    public void setTipo(Tipo_Menssagem tipo) {
-        this.Tipo = tipo;
-    }
+    // REMOVIDO: private Typing_Status typingStatus;
+    // Motivo: 'Digitando' é um evento efêmero de WebSocket, não se persiste no banco.
 }

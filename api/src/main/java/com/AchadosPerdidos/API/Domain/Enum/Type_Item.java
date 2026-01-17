@@ -1,4 +1,6 @@
 package com.AchadosPerdidos.API.Domain.Enum;
 
-public class Teste {
+public enum Type_Item {
+    FIND,
+    LOST
 }
