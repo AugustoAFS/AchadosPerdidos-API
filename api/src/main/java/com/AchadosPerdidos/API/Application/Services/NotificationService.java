@@ -7,7 +7,7 @@ import com.AchadosPerdidos.API.Application.Services.Interfaces.IUsuariosService;
 import com.AchadosPerdidos.API.Application.Services.Interfaces.IItensService;
 import com.AchadosPerdidos.API.Application.Services.Interfaces.IChatService;
 import com.AchadosPerdidos.API.Application.Config.OneSignalConfig;
-import com.AchadosPerdidos.API.Domain.Entity.Chat.ChatMessage;
+import com.AchadosPerdidos.API.Domain.Entity.Chat_Message.ChatMessage;
 import com.AchadosPerdidos.API.Domain.Enum.Tipo_Menssagem;
 import com.AchadosPerdidos.API.Domain.Enum.Status_Menssagem;
 import com.AchadosPerdidos.API.Domain.Enum.Status_Item;

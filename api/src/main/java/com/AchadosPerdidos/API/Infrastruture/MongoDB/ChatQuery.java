@@ -1,6 +1,6 @@
 package com.AchadosPerdidos.API.Infrastruture.MongoDB;
 
-import com.AchadosPerdidos.API.Domain.Entity.Chat.ChatMessage;
+import com.AchadosPerdidos.API.Domain.Entity.Chat_Message.ChatMessage;
 import com.AchadosPerdidos.API.Infrastruture.MongoDB.Interfaces.IChatQuery;
 import com.AchadosPerdidos.API.Domain.Enum.Tipo_Menssagem;
 import com.AchadosPerdidos.API.Domain.Enum.Status_Menssagem;

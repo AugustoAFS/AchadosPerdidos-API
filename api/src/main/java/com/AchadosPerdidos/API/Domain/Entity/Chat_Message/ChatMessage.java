@@ -1,4 +1,4 @@
-package com.AchadosPerdidos.API.Domain.Entity.Chat;
+package com.AchadosPerdidos.API.Domain.Entity.Chat_Message;
 
 import com.AchadosPerdidos.API.Domain.Enum.Status_Message;
 import lombok.AllArgsConstructor;
@@ -19,16 +19,15 @@ import java.time.LocalDateTime;
 public class ChatMessage {
 
     @Id
-    private String id;
-    @Field("chat_id")
-    private String chatId;
-    @Field("sender_id")
-    private Integer senderId;
-    private String content;
-    @Field("created_at")
-    private LocalDateTime createdAt;
-    private Status_Message status;
+    private String Id;
+    @Field("Chat_Id")
+    private String Chat_Id;
+    @Field("Sender_Id")
+    private Integer Sender_Id;
+    private String Content;
+    @Field("Created_at")
+    private LocalDateTime Created_At;
+    private Status_Message Status;
 
-    // REMOVIDO: private Typing_Status typingStatus;
-    // Motivo: 'Digitando' é um evento efêmero de WebSocket, não se persiste no banco.
+    // Digitando é um evento efêmero de WebSocket
 }
