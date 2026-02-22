@@ -19,15 +19,15 @@ import java.time.LocalDateTime;
 public class ChatMessage {
 
     @Id
-    private String Id;
+    private String id;
     @Field("Chat_Id")
-    private String Chat_Id;
+    private String chatId;
     @Field("Sender_Id")
-    private Integer Sender_Id;
-    private String Content;
+    private Integer senderId;
+    private String content;
     @Field("Created_at")
-    private LocalDateTime Created_At;
-    private Status_Message Status;
+    private LocalDateTime createdAt;
+    private Status_Message status;
 
     // Digitando é um evento efêmero de WebSocket
 }

@@ -10,16 +10,16 @@ import org.springframework.web.client.RestTemplate;
 @Configuration
 public class OneSignalConfig {
 
-    @Value("${ONESIGNAL_APP_ID:}")
+    @Value("${onesignal.app-id:}")
     private String appId;
 
-    @Value("${ONESIGNAL_REST_API_KEY:}")
+    @Value("${onesignal.rest-api-key:}")
     private String restApiKey;
 
-    @Value("${ONESIGNAL_ENABLED:false}")
+    @Value("${onesignal.enabled:false}")
     private boolean enabled;
 
-    @Value("${ONESIGNAL_API_URL:https://api.onesignal.com/notifications}")
+    @Value("${onesignal.api-url:https://api.onesignal.com/notifications}")
     private String apiUrl;
 
     @Bean

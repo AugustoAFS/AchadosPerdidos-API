@@ -1,75 +1,76 @@
 package com.AchadosPerdidos.API.Presentation.Controller;
 
-import com.AchadosPerdidos.API.Application.DTOs.Auth.LoginRequestDTO;
-import com.AchadosPerdidos.API.Application.DTOs.Auth.RedefinirSenhaDTO;
-import com.AchadosPerdidos.API.Application.DTOs.Auth.TokenResponseDTO;
-import com.AchadosPerdidos.API.Application.DTOs.Auth.TokenValidationDTO;
-import com.AchadosPerdidos.API.Application.Services.Interfaces.IGoogleAuthService;
-import com.AchadosPerdidos.API.Application.Services.Interfaces.IJWTService;
-import com.AchadosPerdidos.API.Application.Services.Interfaces.IUsuariosService;
+import com.AchadosPerdidos.API.Application.DTOs.Request.User.LoginRequestDTO;
+import com.AchadosPerdidos.API.Application.DTOs.Request.User.RedefinirSenhaRequestDTO;
+import com.AchadosPerdidos.API.Application.DTOs.Response.Auth.TokenResponseDTO;
+import com.AchadosPerdidos.API.Application.DTOs.Response.Auth.TokenValidationDTO;
+import com.AchadosPerdidos.API.Application.Interfaces.Auth.IJWTService;
+import com.AchadosPerdidos.API.Application.Interfaces.Auth.IOAuthProviderService;
+import com.AchadosPerdidos.API.Application.Interfaces.IUsersService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
-@Tag(name = "Auth", description = "API para autenticação e autorização")
+@Tag(name = "Auth", description = "Autenticação e autorização de usuários")
 public class AuthController {
 
     @Autowired
-    private IUsuariosService usuariosService;
+    private IUsersService usersService;
 
     @Autowired
-    private IGoogleAuthService googleAuthService;
+    @Qualifier("googleAuthService")
+    private IOAuthProviderService googleAuthService;
 
     @Autowired
     private IJWTService jwtService;
 
     @PostMapping("/login")
-    @Operation(summary = "Login de usuário", description = "Autentica usuário com email e senha, retornando token JWT")
-    public ResponseEntity<TokenResponseDTO> login(@RequestBody LoginRequestDTO loginRequestDTO) {
-        return ResponseEntity.ok(usuariosService.login(loginRequestDTO));
+    @Operation(summary = "Login com e-mail e senha", description = "Autentica o usuário e retorna um token JWT")
+    public ResponseEntity<TokenResponseDTO> login(@Valid @RequestBody LoginRequestDTO dto) {
+        return ResponseEntity.ok(usersService.login(dto));
     }
 
     @PostMapping("/logout")
-    @Operation(summary = "Logout de usuário", description = "Valida token para logout. Cliente deve descartar o token localmente")
+    @Operation(summary = "Logout", description = "Invalida o token JWT. O cliente deve descartá-lo localmente")
     public ResponseEntity<String> logout(
-            @Parameter(description = "Token JWT no formato 'Bearer {token}'")
-            @RequestHeader("Authorization") String authorization) {
+            @Parameter(description = "Token JWT no formato 'Bearer {token}'") @RequestHeader("Authorization") String authorization) {
         return ResponseEntity.ok(jwtService.logout(authorization));
     }
 
     @GetMapping("/validate")
-    @Operation(summary = "Validar token JWT", description = "Valida se um token JWT é válido e retorna informações básicas")
+    @Operation(summary = "Validar token JWT", description = "Confirma se o token é válido e retorna os claims básicos")
     public ResponseEntity<TokenValidationDTO> validateToken(
-            @Parameter(description = "Token JWT no formato 'Bearer {token}'")
-            @RequestHeader("Authorization") String authorization) {
+            @Parameter(description = "Token JWT no formato 'Bearer {token}'") @RequestHeader("Authorization") String authorization) {
         return ResponseEntity.ok(jwtService.validateTokenAndGetInfo(authorization));
     }
 
     @PostMapping("/redefinir-senha")
-    @Operation(summary = "Redefinir senha do usuário", description = "Redefine senha usando CPF ou matrícula")
-    public ResponseEntity<String> redefinirSenha(@RequestBody RedefinirSenhaDTO redefinirSenhaDTO) {
-        usuariosService.redefinirSenha(redefinirSenhaDTO);
+    @Operation(summary = "Redefinir senha", description = "Redefine a senha do usuário informado")
+    public ResponseEntity<String> redefinirSenha(@Valid @RequestBody RedefinirSenhaRequestDTO dto) {
+        usersService.redefinirSenha(dto);
         return ResponseEntity.ok("Senha redefinida com sucesso");
     }
 
     @GetMapping("/google/login")
-    @Operation(summary = "Iniciar login com Google OAuth2", description = "Redireciona para autorização do Google")
-    public ResponseEntity<String> loginGoogle() {
+    @Operation(summary = "Iniciar login com Google", description = "Redireciona para a página de autorização do Google OAuth2")
+    public ResponseEntity<Void> loginGoogle() {
         String authUrl = googleAuthService.generateAuthorizationUrl();
         return ResponseEntity.status(HttpStatus.FOUND).header("Location", authUrl).build();
     }
 
     @GetMapping("/google/callback")
-    @Operation(summary = "Callback do Google OAuth2", description = "Processa callback após autorização e retorna token JWT")
-    public ResponseEntity<TokenResponseDTO> handleGoogleAuthCallback(
-            @Parameter(description = "Código de autorização do Google") @RequestParam String code) {
-        return ResponseEntity.ok(usuariosService.loginWithGoogle(code, googleAuthService, jwtService));
+    @Operation(summary = "Callback do Google OAuth2", description = "Processa o código de autorização e retorna token JWT")
+    public ResponseEntity<TokenResponseDTO> handleGoogleCallback(
+            @Parameter(description = "Código de autorização retornado pelo Google") @RequestParam String code) {
+        return ResponseEntity.ok(usersService.loginWithGoogle(code, googleAuthService, jwtService));
     }
 }
-

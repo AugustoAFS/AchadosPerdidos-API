@@ -16,22 +16,13 @@ import java.security.NoSuchAlgorithmException;
 public class JwtConfig {
 
     @Value("${jwt.secret-key}")
-    private String SecretKey;
-
-    @Value("${jwt.issuer}")
-    private String Issuer;
-
-    @Value("${jwt.audience}")
-    private String Audience;
-
-    @Value("${jwt.expiry-in-minutes:60}")
-    private int ExpiryInMinutes;
+    private String secretKey;
 
     @Bean
     public SecretKey jwtSecretKey() {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] keyBytes = digest.digest(SecretKey.getBytes(StandardCharsets.UTF_8));
+            byte[] keyBytes = digest.digest(secretKey.getBytes(StandardCharsets.UTF_8));
 
             return Keys.hmacShaKeyFor(keyBytes);
         } catch (NoSuchAlgorithmException e) {
@@ -39,4 +30,3 @@ public class JwtConfig {
         }
     }
 }
-

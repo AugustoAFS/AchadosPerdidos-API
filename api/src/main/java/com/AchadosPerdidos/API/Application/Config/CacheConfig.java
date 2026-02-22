@@ -11,7 +11,6 @@ import org.springframework.context.annotation.Configuration;
 import java.time.Duration;
 import java.util.List;
 
-
 @Configuration
 @EnableCaching
 public class CacheConfig {
@@ -27,17 +26,16 @@ public class CacheConfig {
             "roles",
             "fotos",
             "deviceTokens",
-            "jwtTokens"
-    );
+            "jwtTokens");
 
     @Value("${cache.max-size}")
-    private int MaxSize;
+    private int maxSize;
 
     @Value("${cache.expire-after-write-minutes}")
-    private int ExpireAfterWrite;
+    private int expireAfterWrite;
 
     @Value("${cache.expire-after-access-minutes}")
-    private int ExpireAfterAccess;
+    private int expireAfterAccess;
 
     @Bean
     public CacheManager cacheManager() {
@@ -51,8 +49,8 @@ public class CacheConfig {
     @Bean
     public Caffeine<Object, Object> caffeineBuilder() {
         return Caffeine.newBuilder()
-                .maximumSize(MaxSize)
-                .expireAfterWrite(Duration.ofMinutes(ExpireAfterWrite))
-                .expireAfterAccess(Duration.ofMinutes(ExpireAfterAccess));
+                .maximumSize(maxSize)
+                .expireAfterWrite(Duration.ofMinutes(expireAfterWrite))
+                .expireAfterAccess(Duration.ofMinutes(expireAfterAccess));
     }
 }

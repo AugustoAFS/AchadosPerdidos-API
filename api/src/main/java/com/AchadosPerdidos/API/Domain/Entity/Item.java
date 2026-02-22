@@ -2,28 +2,56 @@ package com.AchadosPerdidos.API.Domain.Entity;
 
 import com.AchadosPerdidos.API.Domain.Enum.Status_Item;
 import com.AchadosPerdidos.API.Domain.Enum.Type_Item;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@Entity
+@Table(name = "item", schema = "ap")
 public class Item extends BaseEntity {
-    private Integer Id;
-    private String Title;
-    private String Description;
-    private Type_Item Type_Item;
-    private Status_Item Status_Item;
-    private String Meeting_Location;
 
-    private LocalDate Posted_At;
-    private LocalDate Delivered_At;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Integer id;
 
-    private Integer Campus_Id;
-    private Integer Category_Id;
-    private Integer Autor_User_Id;
-    private Integer Receiver_User_Id;
+    @Column(name = "title", nullable = false, length = 100)
+    private String title;
+
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type_item", nullable = false, length = 20)
+    private Type_Item typeItem;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status_item", nullable = false, length = 20)
+    private Status_Item statusItem;
+
+    @Column(name = "meeting_location", length = 255)
+    private String meetingLocation;
+
+    @Column(name = "posted_at")
+    private LocalDateTime postedAt;
+
+    @Column(name = "delivered_at")
+    private LocalDateTime deliveredAt;
+
+    @Column(name = "campus_id", nullable = false)
+    private Integer campusId;
+
+    @Column(name = "category_id")
+    private Integer categoryId;
+
+    @Column(name = "author_user_id", nullable = false)
+    private Integer authorUserId;
+
+    @Column(name = "receiver_user_id")
+    private Integer receiverUserId;
 }

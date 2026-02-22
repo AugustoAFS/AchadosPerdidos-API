@@ -13,13 +13,13 @@ import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 @Configuration
 public class GoogleOAuthConfig {
 
-    @Value("${GOOGLE_AUTH_CLIENT_ID}")
+    @Value("${google.auth.client-id}")
     private String clientId;
 
-    @Value("${GOOGLE_AUTH_CLIENT_SECRET}")
+    @Value("${google.auth.client-secret}")
     private String clientSecret;
 
-    @Value("${GOOGLE_AUTH_REDIRECT_URI}")
+    @Value("${google.auth.redirect-uri}")
     private String redirectUri;
 
     @Bean

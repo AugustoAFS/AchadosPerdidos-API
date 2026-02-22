@@ -1,14 +1,21 @@
 package com.AchadosPerdidos.API.Domain.Entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@Entity
+@Table(name = "role", schema = "ap")
 public class Role extends BaseEntity {
-    private Integer Id;
-    private String Name;
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Integer id;
+
+    @Column(name = "name", nullable = false, length = 50)
+    private String name;
 }
