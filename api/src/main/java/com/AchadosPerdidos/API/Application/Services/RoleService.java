@@ -1,67 +1,42 @@
 package com.AchadosPerdidos.API.Application.Services;
 
-import com.AchadosPerdidos.API.Application.DTOs.Role.RoleDTO;
-import com.AchadosPerdidos.API.Application.Mapper.RoleMapper;
-import com.AchadosPerdidos.API.Application.Services.Interfaces.IRoleService;
+import com.AchadosPerdidos.API.Application.Interfaces.IRoleService;
 import com.AchadosPerdidos.API.Domain.Entity.Role;
 import com.AchadosPerdidos.API.Domain.Repository.RoleRepository;
-import com.AchadosPerdidos.API.Exeptions.ResourceNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
-public class RoleService implements IRoleService {
+public class RoleService extends BaseService<Role, Integer, RoleRepository>
+        implements IRoleService {
 
-    @Autowired
-    private RoleRepository roleRepository;
-
-    @Autowired
-    private RoleMapper roleMapper;
-
-    @Override
-    @Cacheable(value = "roles", key = "'all'")
-    public List<RoleDTO> getAllRoles() {
-        List<Role> roles = roleRepository.findAll();
-        return roles.stream()
-                .map(roleMapper::toDTO)
-                .collect(Collectors.toList());
+    public RoleService(RoleRepository repository) {
+        super(repository);
     }
 
     @Override
-    @Cacheable(value = "roles", key = "#id")
-    public RoleDTO getRoleById(Integer id) {
-        if (id == null || id <= 0) {
-            throw new IllegalArgumentException("ID da role deve ser válido");
-        }
-        
-        Role role = roleRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Role", "ID", id));
-        return roleMapper.toDTO(role);
+    public Role update(Integer id, Role data) {
+        throw new UnsupportedOperationException("Roles não são atualizadas via API.");
     }
 
     @Override
-    @Cacheable(value = "roles", key = "'nome_' + #nome")
-    public RoleDTO getRoleByNome(String nome) {
-        if (!StringUtils.hasText(nome)) {
-            throw new IllegalArgumentException("Nome da role não pode ser vazio");
-        }
-        
-        Role role = roleRepository.findByNome(nome)
-                .orElseThrow(() -> new ResourceNotFoundException("Role", "nome", nome));
-        return roleMapper.toDTO(role);
+    public void deactivate(Integer id) {
+        throw new UnsupportedOperationException("Roles não são desativadas via API.");
     }
 
     @Override
-    @Cacheable(value = "roles", key = "'active'")
-    public List<RoleDTO> getActiveRoles() {
-        List<Role> activeRoles = roleRepository.findActive();
-        return activeRoles.stream()
-                .map(roleMapper::toDTO)
-                .collect(Collectors.toList());
+    @Transactional(readOnly = true)
+    public Role findByName(String name) {
+        return repository.findByNameAndActiveTrue(name)
+                .orElseThrow(() -> new EntityNotFoundException("Role não encontrada: " + name));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Role> findAll() {
+        return repository.findByActiveTrue();
     }
 }

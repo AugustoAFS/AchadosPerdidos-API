@@ -1,75 +1,74 @@
 package com.AchadosPerdidos.API.Presentation.Controller;
 
-import com.AchadosPerdidos.API.Application.DTOs.Campus.CampusDTO;
-import com.AchadosPerdidos.API.Application.DTOs.Campus.CampusListDTO;
-import com.AchadosPerdidos.API.Application.DTOs.Campus.CampusCreateDTO;
-import com.AchadosPerdidos.API.Application.DTOs.Campus.CampusUpdateDTO;
-import com.AchadosPerdidos.API.Application.Services.Interfaces.ICampusService;
+import com.AchadosPerdidos.API.Application.DTOs.Request.Campus.CreateCampusRequestDTO;
+import com.AchadosPerdidos.API.Application.DTOs.Response.Campus.CampusResponseDTO;
+import com.AchadosPerdidos.API.Application.Interfaces.ICampusService;
+import com.AchadosPerdidos.API.Application.Mapper.CampusMapper;
+import com.AchadosPerdidos.API.Domain.Entity.Campus;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
-@RequestMapping("/api/campus")
-@Tag(name = "Campus", description = "API para gerenciamento de campus")
+@RequestMapping("/api/campuses")
+@Tag(name = "Campuses", description = "Gerenciamento de campi")
 public class CampusController {
 
     @Autowired
     private ICampusService campusService;
 
-    @GetMapping
-    public ResponseEntity<CampusListDTO> getAllCampus() {
-        CampusListDTO campus = campusService.getAllCampus();
-        return ResponseEntity.ok(campus);
+    @Autowired
+    private CampusMapper campusMapper;
+
+    @PostMapping
+    @Operation(summary = "Criar campus")
+    public ResponseEntity<CampusResponseDTO> create(@Valid @RequestBody CreateCampusRequestDTO dto) {
+        Campus campus = campusMapper.fromCreate(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(campusMapper.toResponse(campusService.create(campus)));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CampusDTO> getCampusById(@PathVariable int id) {
-        CampusDTO campus = campusService.getCampusById(id);
-        if (campus != null) {
-            return ResponseEntity.ok(campus);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    @Operation(summary = "Buscar campus por ID")
+    public ResponseEntity<CampusResponseDTO> findById(
+            @Parameter(description = "ID do campus") @PathVariable Integer id) {
+        return ResponseEntity.ok(campusMapper.toResponse(campusService.findById(id)));
     }
 
-    @PostMapping
-    public ResponseEntity<CampusDTO> createCampus(@RequestBody CampusCreateDTO campusCreateDTO) {
-        CampusDTO createdCampus = campusService.createCampusFromDTO(campusCreateDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdCampus);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<CampusDTO> updateCampus(@PathVariable int id, @RequestBody CampusUpdateDTO campusUpdateDTO) {
-        CampusDTO updatedCampus = campusService.updateCampusFromDTO(id, campusUpdateDTO);
-        if (updatedCampus != null) {
-            return ResponseEntity.ok(updatedCampus);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCampus(@PathVariable int id) {
-        boolean deleted = campusService.deleteCampus(id);
-        if (deleted) {
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    @GetMapping("/active")
-    public ResponseEntity<CampusListDTO> getActiveCampus() {
-        CampusListDTO activeCampus = campusService.getActiveCampus();
-        return ResponseEntity.ok(activeCampus);
+    @GetMapping
+    @Operation(summary = "Listar todos os campi ativos")
+    public ResponseEntity<List<CampusResponseDTO>> findAll() {
+        return ResponseEntity.ok(campusMapper.toResponseList(campusService.findAll()));
     }
 
     @GetMapping("/institution/{institutionId}")
-    public ResponseEntity<CampusListDTO> getCampusByInstitution(@PathVariable int institutionId) {
-        CampusListDTO campus = campusService.getCampusByInstitution(institutionId);
-        return ResponseEntity.ok(campus);
+    @Operation(summary = "Listar campi por instituição")
+    public ResponseEntity<List<CampusResponseDTO>> findByInstitution(
+            @Parameter(description = "ID da instituição") @PathVariable Integer institutionId) {
+        return ResponseEntity.ok(campusMapper.toResponseList(campusService.findByInstitution(institutionId)));
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Atualizar campus")
+    public ResponseEntity<CampusResponseDTO> update(
+            @Parameter(description = "ID do campus") @PathVariable Integer id,
+            @Valid @RequestBody CreateCampusRequestDTO dto) {
+        Campus campus = campusMapper.fromCreate(dto);
+        return ResponseEntity.ok(campusMapper.toResponse(campusService.update(id, campus)));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Desativar campus (soft-delete)")
+    public ResponseEntity<Void> deactivate(
+            @Parameter(description = "ID do campus") @PathVariable Integer id) {
+        campusService.deactivate(id);
+        return ResponseEntity.noContent().build();
     }
 }

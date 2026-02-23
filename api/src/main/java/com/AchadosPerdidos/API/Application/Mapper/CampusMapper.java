@@ -1,81 +1,39 @@
 package com.AchadosPerdidos.API.Application.Mapper;
 
-import com.AchadosPerdidos.API.Application.DTOs.Campus.CampusDTO;
-import com.AchadosPerdidos.API.Application.DTOs.Campus.CampusListDTO;
+import com.AchadosPerdidos.API.Application.DTOs.Request.Campus.CreateCampusRequestDTO;
+import com.AchadosPerdidos.API.Application.DTOs.Response.Campus.CampusResponseDTO;
 import com.AchadosPerdidos.API.Domain.Entity.Campus;
-import com.AchadosPerdidos.API.Domain.Entity.Endereco;
-import com.AchadosPerdidos.API.Domain.Entity.Instituicoes;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class CampusMapper {
 
-    public CampusDTO toDTO(Campus campus) {
-        if (campus == null) {
+    public CampusResponseDTO toResponse(Campus campus) {
+        if (campus == null)
             return null;
-        }
-        
-        Integer instituicaoId = campus.getInstituicaoId() != null ? campus.getInstituicaoId().getId() : null;
-        Integer enderecoId = campus.getEnderecoId() != null ? campus.getEnderecoId().getId() : null;
 
-        return new CampusDTO(
-            campus.getId(),
-            campus.getNome(),
-            instituicaoId,
-            enderecoId,
-            campus.getDtaCriacao(),
-            campus.getFlgInativo(),
-            campus.getDtaRemocao()
-        );
+        CampusResponseDTO dto = new CampusResponseDTO();
+        dto.setId(campus.getId());
+        dto.setName(campus.getName());
+        dto.setInstitutionId(campus.getInstitutionId());
+        return dto;
     }
 
-    public Campus toEntity(CampusDTO dto) {
-        if (dto == null) {
+    public List<CampusResponseDTO> toResponseList(List<Campus> campuses) {
+        if (campuses == null)
+            return List.of();
+        return campuses.stream().map(this::toResponse).toList();
+    }
+
+    public Campus fromCreate(CreateCampusRequestDTO dto) {
+        if (dto == null)
             return null;
-        }
-        
+
         Campus campus = new Campus();
-        campus.setId(dto.getId());
-        campus.setNome(dto.getNome());
-        campus.setInstituicaoId(toInstituicao(dto.getInstituicaoId()));
-        campus.setEnderecoId(toEndereco(dto.getEnderecoId()));
-        campus.setDtaCriacao(dto.getDtaCriacao());
-        campus.setFlgInativo(dto.getFlgInativo());
-        campus.setDtaRemocao(dto.getDtaRemocao());
-        
+        campus.setName(dto.getName());
+        campus.setInstitutionId(dto.getInstitutionId());
         return campus;
-    }
-
-    public CampusListDTO toListDTO(List<Campus> campus) {
-        if (campus == null) {
-            return null;
-        }
-        
-        List<CampusDTO> dtoList = campus.stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
-        
-        return new CampusListDTO(dtoList, dtoList.size());
-    }
-
-    private Instituicoes toInstituicao(Integer id) {
-        if (id == null) {
-            return null;
-        }
-        Instituicoes instituicao = new Instituicoes();
-        instituicao.setId(id);
-        return instituicao;
-    }
-
-    private Endereco toEndereco(Integer id) {
-        if (id == null) {
-            return null;
-        }
-        Endereco endereco = new Endereco();
-        endereco.setId(id);
-        return endereco;
     }
 }

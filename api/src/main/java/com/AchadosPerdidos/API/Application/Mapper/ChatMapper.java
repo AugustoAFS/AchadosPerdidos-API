@@ -1,95 +1,49 @@
 package com.AchadosPerdidos.API.Application.Mapper;
 
-import com.AchadosPerdidos.API.Application.DTOs.ChatMessage.ChatMessageCreateDTO;
-import com.AchadosPerdidos.API.Application.DTOs.ChatMessage.ChatMessageDTO;
-import com.AchadosPerdidos.API.Application.DTOs.ChatMessage.ChatMessageListDTO;
-import com.AchadosPerdidos.API.Application.DTOs.ChatMessage.ChatMessageUpdateDTO;
-import com.AchadosPerdidos.API.Domain.Entity.Chat.ChatMessage;
+import com.AchadosPerdidos.API.Application.DTOs.Response.Chat.ChatMessageResponseDTO;
+import com.AchadosPerdidos.API.Application.DTOs.Response.Chat.ChatResponseDTO;
+import com.AchadosPerdidos.API.Domain.Entity.Chat;
+import com.AchadosPerdidos.API.Domain.Entity.Chat_Message.ChatMessage;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class ChatMapper {
 
-    public ChatMessageDTO toDTO(ChatMessage chatMessage) {
-        if (chatMessage == null) {
+    public ChatResponseDTO toResponse(Chat chat) {
+        if (chat == null)
             return null;
-        }
-        
-        return new ChatMessageDTO(
-            chatMessage.getId(),
-            chatMessage.getId_Chat(),
-            chatMessage.getId_Usuario_Remetente(),
-            chatMessage.getId_Usuario_Destino(),
-            chatMessage.getMenssagem(),
-            chatMessage.getData_Hora_Menssagem(),
-            chatMessage.getStatus(),
-            chatMessage.getTipo()
-        );
+
+        ChatResponseDTO dto = new ChatResponseDTO();
+        dto.setId(chat.getId());
+        dto.setItemId(chat.getItemId());
+        return dto;
     }
 
-    public ChatMessage toEntity(ChatMessageDTO dto) {
-        if (dto == null) {
-            return null;
-        }
-        
-        ChatMessage chatMessage = new ChatMessage();
-        chatMessage.setId(dto.getId());
-        chatMessage.setId_Chat(dto.getIdChat());
-        chatMessage.setId_Usuario_Remetente(dto.getIdUsuarioRemetente());
-        chatMessage.setId_Usuario_Destino(dto.getIdUsuarioDestino());
-        chatMessage.setMenssagem(dto.getMenssagem());
-        chatMessage.setData_Hora_Menssagem(dto.getDataHoraMenssagem());
-        chatMessage.setStatus(dto.getStatus());
-        chatMessage.setTipo(dto.getTipo());
-        
-        return chatMessage;
+    public List<ChatResponseDTO> toResponseList(List<Chat> chats) {
+        if (chats == null)
+            return List.of();
+        return chats.stream().map(this::toResponse).toList();
     }
 
-    public ChatMessage fromCreateDTO(ChatMessageCreateDTO dto) {
-        if (dto == null) {
+    public ChatMessageResponseDTO toMessageResponse(ChatMessage message) {
+        if (message == null)
             return null;
-        }
-        
-        ChatMessage chatMessage = new ChatMessage(
-            dto.getIdChat(),
-            dto.getIdUsuarioRemetente(),
-            dto.getIdUsuarioDestino(),
-            dto.getMenssagem(),
-            dto.getTipo() != null ? dto.getTipo() : com.AchadosPerdidos.API.Domain.Enum.Tipo_Menssagem.CHAT,
-            dto.getStatus() != null ? dto.getStatus() : com.AchadosPerdidos.API.Domain.Enum.Status_Menssagem.ENVIADA
-        );
-        
-        return chatMessage;
+
+        ChatMessageResponseDTO dto = new ChatMessageResponseDTO();
+        dto.setId(message.getId());
+        dto.setChatId(message.getChatId());
+        dto.setSenderId(message.getSenderId());
+        dto.setContent(message.getContent());
+        dto.setCreatedAt(message.getCreatedAt());
+        dto.setStatus(message.getStatus());
+        return dto;
     }
 
-    public void updateFromDTO(ChatMessage chatMessage, ChatMessageUpdateDTO dto) {
-        if (chatMessage == null || dto == null) {
-            return;
-        }
-        
-        if (dto.getMenssagem() != null) {
-            chatMessage.setMenssagem(dto.getMenssagem());
-        }
-        if (dto.getStatus() != null) {
-            chatMessage.setStatus(dto.getStatus());
-        }
-        if (dto.getTipo() != null) {
-            chatMessage.setTipo(dto.getTipo());
-        }
-    }
-
-    public ChatMessageListDTO toListDTO(List<ChatMessage> mensagens) {
-        if (mensagens == null) {
-            return null;
-        }
-        
-        List<ChatMessageDTO> dtoList = mensagens.stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
-        
-        return new ChatMessageListDTO(dtoList, dtoList.size());
+    public List<ChatMessageResponseDTO> toMessageResponseList(List<ChatMessage> messages) {
+        if (messages == null)
+            return List.of();
+        return messages.stream().map(this::toMessageResponse).toList();
     }
 }

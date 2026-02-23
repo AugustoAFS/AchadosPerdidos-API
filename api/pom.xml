@@ -107,14 +107,14 @@
             <version>3.2.1</version>
         </dependency>
 
-        <!-- Dotenv (.env support) -->
+        <!-- Dotenv -->
         <dependency>
             <groupId>io.github.cdimascio</groupId>
             <artifactId>dotenv-java</artifactId>
             <version>3.0.0</version>
         </dependency>
 
-        <!-- AWS SDK BOM (gerencia versões) -->
+        <!-- AWS SDK -->
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>s3</artifactId>
@@ -130,14 +130,12 @@
             <artifactId>caffeine</artifactId>
         </dependency>
 
-        <!-- Testes -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
 
-        <!-- H2 Database (in-memory for tests) -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
@@ -146,7 +144,6 @@
 
     </dependencies>
 
-    <!-- Repositórios Maven -->
     <repositories>
         <repository>
             <id>central</id>
@@ -175,18 +172,15 @@
         </pluginRepository>
     </pluginRepositories>
 
-    <!-- Versões forçadas seguras (CVE mitigadas) -->
     <dependencyManagement>
         <dependencies>
 
-            <!-- Checker Framework (DEVE VIR PRIMEIRO - resolve conflito do Caffeine) -->
             <dependency>
                 <groupId>org.checkerframework</groupId>
                 <artifactId>checker-qual</artifactId>
                 <version>3.42.0</version>
             </dependency>
 
-            <!-- AWS SDK BOM (gerencia versões compatíveis com Java 21) -->
             <dependency>
                 <groupId>software.amazon.awssdk</groupId>
                 <artifactId>bom</artifactId>
@@ -195,7 +189,6 @@
                 <scope>import</scope>
             </dependency>
 
-            <!-- Logback corrigido - versão mais recente sem CVE conhecido -->
             <dependency>
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-classic</artifactId>
@@ -207,7 +200,6 @@
                 <version>1.5.14</version>
             </dependency>
 
-            <!-- Spring Security corrigido - versão mais recente -->
             <dependency>
                 <groupId>org.springframework.security</groupId>
                 <artifactId>spring-security-bom</artifactId>
@@ -216,7 +208,6 @@
                 <scope>import</scope>
             </dependency>
 
-            <!-- Spring Framework corrigido - versão mais recente -->
             <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-framework-bom</artifactId>
@@ -225,21 +216,18 @@
                 <scope>import</scope>
             </dependency>
 
-            <!-- json-smart corrigido -->
             <dependency>
                 <groupId>net.minidev</groupId>
                 <artifactId>json-smart</artifactId>
                 <version>2.5.2</version>
             </dependency>
 
-            <!-- Tomcat corrigido - versão mais recente -->
             <dependency>
                 <groupId>org.apache.tomcat.embed</groupId>
                 <artifactId>tomcat-embed-core</artifactId>
                 <version>10.1.35</version>
             </dependency>
 
-            <!-- Netty corrigido -->
             <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-bom</artifactId>
@@ -253,7 +241,6 @@
 
     <build>
         <plugins>
-            <!-- Compilador Java 21 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -273,7 +260,6 @@
                 </configuration>
             </plugin>
 
-            <!-- Spring Boot plugin -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

@@ -1,149 +1,113 @@
 package com.AchadosPerdidos.API.Application.Config;
 
-import com.AchadosPerdidos.API.Application.Services.JwtAuthenticationFilter;
-import org.springframework.beans.factory.annotation.Value;
+import com.AchadosPerdidos.API.Application.Interfaces.Auth.IJWTService;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.lang.NonNull;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.lang.NonNull;
+import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity
 public class SecurityConfig {
 
-    private static final List<String> DEFAULT_PROD_ORIGINS = List.of(
-            "https://achadosperdidos.com",
-            "https://www.achadosperdidos.com",
-            "https://api.achadosperdidos.com",
-            "https://api-achadosperdidos.com.br",
-            "https://www.api-achadosperdidos.com.br"
-    );
-    private static final List<String> DEFAULT_DEV_ORIGIN_PATTERNS = List.of(
-            "http://localhost:*",
-            "http://127.0.0.1:*"
-    );
+        private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final EnvironmentConfig environmentConfig;
+        private final IJWTService jwtService;
 
-    @Value("${SECURITY_ALLOWED_ORIGINS:}")
-    private String allowedOriginsEnv;
-
-    @Value("${SECURITY_ALLOWED_ORIGIN_PATTERNS:http://localhost:*}")
-    private String allowedOriginPatternsEnv;
-
-    @Value("${SECURITY_ALLOWED_METHODS:GET,POST,PUT,DELETE,OPTIONS,PATCH}")
-    private String allowedMethodsEnv;
-
-    @Value("${SECURITY_ALLOWED_HEADERS:*}")
-    private String allowedHeadersEnv;
-
-    @Value("${SECURITY_EXPOSED_HEADERS:Authorization,Content-Type,X-Requested-With,X-Token-Expiry}")
-    private String exposedHeadersEnv;
-
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, EnvironmentConfig environmentConfig) {
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-        this.environmentConfig = environmentConfig;
-    }
-
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(authz -> authz
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/swagger/**",
-                                "/v3/api-docs/**",
-                                "/swagger-resources/**",
-                                "/webjars/**",
-                                "/configuration/**"
-                        ).permitAll()
-                        .requestMatchers(
-                                "/actuator/**",
-                                "/error"
-                        ).permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/usuarios").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/usuarios/aluno").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/usuarios/servidor").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/usuarios/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/usuarios/redefinir-senha").permitAll()
-                        .requestMatchers("/api/usuarios/criar").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/usuarios/*/redefinir-senha").permitAll()
-                        .requestMatchers("/api/google-auth/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/campus").permitAll()
-                        .anyRequest().authenticated()
-                )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
-        return http.build();
-    }
-
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowCredentials(true);
-        configuration.setAllowedMethods(new ArrayList<>(parseList(allowedMethodsEnv)));
-        configuration.setAllowedHeaders(new ArrayList<>(parseList(allowedHeadersEnv)));
-        configuration.setExposedHeaders(new ArrayList<>(parseList(exposedHeadersEnv)));
-        configuration.setMaxAge(3600L);
-
-        if (environmentConfig.isProduction()) {
-            configuration.setAllowedOrigins(new ArrayList<>(resolveProdOrigins()));
-        } else {
-            List<String> patterns = parseList(allowedOriginPatternsEnv);
-            if (patterns.isEmpty()) {
-                patterns = DEFAULT_DEV_ORIGIN_PATTERNS;
-            }
-            configuration.setAllowedOriginPatterns(new ArrayList<>(patterns));
+        public SecurityConfig(IJWTService jwtService) {
+                this.jwtService = jwtService;
         }
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
-    }
-
-    @NonNull
-    private List<String> resolveProdOrigins() {
-        List<String> envOrigins = parseList(allowedOriginsEnv);
-        return envOrigins.isEmpty() ? new ArrayList<>(DEFAULT_PROD_ORIGINS) : envOrigins;
-    }
-
-    private List<String> parseList(String raw) {
-        if (raw == null || raw.isBlank()) {
-            return new ArrayList<>();
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
         }
-        return Stream.of(raw.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .collect(Collectors.toCollection(ArrayList::new));
-    }
+
+        @Bean
+        public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+                http
+                                .csrf(csrf -> csrf.disable())
+                                .httpBasic(basic -> basic.disable())
+                                .formLogin(form -> form.disable())
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .authorizeHttpRequests(auth -> auth
+                                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                                                .requestMatchers(
+                                                                "/swagger-ui/**",
+                                                                "/v3/api-docs/**",
+                                                                "/v1/api-docs/**",
+                                                                "/swagger",
+                                                                "/api-docs/**",
+                                                                "/swagger-resources/**",
+                                                                "/webjars/**")
+                                                .permitAll()
+                                                .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+                                                .requestMatchers("/api/auth/**").permitAll()
+                                                .anyRequest().authenticated())
+                                .addFilterBefore(jwtAuthFilter(), UsernamePasswordAuthenticationFilter.class);
+
+                return http.build();
+        }
+
+        private OncePerRequestFilter jwtAuthFilter() {
+                return new OncePerRequestFilter() {
+                        @Override
+                        protected void doFilterInternal(
+                                        @NonNull HttpServletRequest request,
+                                        @NonNull HttpServletResponse response,
+                                        @NonNull FilterChain filterChain) throws ServletException, IOException {
+
+                                String authHeader = request.getHeader("Authorization");
+
+                                if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                                        try {
+                                                String token = authHeader.substring(7).trim();
+
+                                                if (jwtService.validateToken(token)) {
+                                                        String email = jwtService.getEmailFromToken(token);
+                                                        String role = jwtService.getRoleFromToken(token);
+                                                        String userId = jwtService.getUserIdFromToken(token);
+
+                                                        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                                                                        email,
+                                                                        userId,
+                                                                        List.of(new SimpleGrantedAuthority(
+                                                                                        "ROLE_" + role)));
+
+                                                        SecurityContextHolder.getContext()
+                                                                        .setAuthentication(authentication);
+                                                        log.debug("JWT autenticado: userId={}, role={}", userId, role);
+                                                }
+                                        } catch (Exception e) {
+                                                log.warn("Falha ao processar token JWT: {}", e.getMessage());
+                                        }
+                                }
+
+                                filterChain.doFilter(request, response);
+                        }
+                };
+        }
 }
-
