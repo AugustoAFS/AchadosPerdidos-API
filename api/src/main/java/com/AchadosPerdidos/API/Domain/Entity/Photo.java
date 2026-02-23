@@ -3,8 +3,6 @@ package com.AchadosPerdidos.API.Domain.Entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigInteger;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -25,7 +23,7 @@ public class Photo extends BaseEntity {
     private String fileName;
 
     @Column(name = "size_bytes")
-    private BigInteger sizeBytes;
+    private Long sizeBytes;
 
     @Column(name = "file_type", length = 50)
     private String fileType;

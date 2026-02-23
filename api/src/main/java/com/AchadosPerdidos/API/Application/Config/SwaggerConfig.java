@@ -67,7 +67,7 @@ public class SwaggerConfig {
         }
 
         return environmentConfig.isProduction()
-                ? "https://api-achadosperdidos.com.br"
+                ? "https://api.achadosperdidos.com.br"
                 : "http://localhost:8080";
     }
 
