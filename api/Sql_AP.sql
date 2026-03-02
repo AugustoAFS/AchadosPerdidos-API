@@ -2,135 +2,140 @@ CREATE SCHEMA IF NOT EXISTS Ap;
 
 -- 1. INSTITUTION
 CREATE TABLE Ap.Institution (
-                                Id SERIAL PRIMARY KEY,
-                                Name VARCHAR(100) NOT NULL,
-                                Prefix VARCHAR(20),
-                                Cnpj VARCHAR(20),
-                                Active BOOLEAN DEFAULT TRUE,
-                                Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                                Deleted_At TIMESTAMP NULL
+Id SERIAL PRIMARY KEY,
+Name VARCHAR(100) NOT NULL,
+Prefix VARCHAR(20),
+Cnpj VARCHAR(20),
+Active BOOLEAN DEFAULT TRUE,
+Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+Deleted_At TIMESTAMP NULL
 );
 
 -- 2. CAMPUS
 CREATE TABLE Ap.Campus (
-                           Id SERIAL PRIMARY KEY,
-                           Name VARCHAR(100) NOT NULL,
-                           Institution_Id INTEGER NOT NULL,
-                           Active BOOLEAN DEFAULT TRUE,
-                           Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                           Deleted_At TIMESTAMP NULL,
-                           CONSTRAINT Fk_Campus_Institution FOREIGN KEY (Institution_Id) REFERENCES Ap.Institution(Id)
+Id SERIAL PRIMARY KEY,
+Name VARCHAR(100) NOT NULL,
+Institution_Id INTEGER NOT NULL,
+Active BOOLEAN DEFAULT TRUE,
+Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+Deleted_At TIMESTAMP NULL,
+CONSTRAINT Fk_Campus_Institution FOREIGN KEY (Institution_Id) REFERENCES Ap.Institution(Id)
 );
 
 -- 3. ROLE (Papéis como Aluno, Servidor, Admin)
 CREATE TABLE Ap.Role (
-                         Id SERIAL PRIMARY KEY,
-                         Name VARCHAR(50) NOT NULL,
-                         Active BOOLEAN DEFAULT TRUE,
-                         Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                         Deleted_At TIMESTAMP NULL
+Id SERIAL PRIMARY KEY,
+Name VARCHAR(50) NOT NULL,
+Active BOOLEAN DEFAULT TRUE,
+Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+Deleted_At TIMESTAMP NULL
 );
 
 -- 4. CATEGORY (Categorias de itens: Eletrônicos, Documentos, etc)
 CREATE TABLE Ap.Category (
-                             Id SERIAL PRIMARY KEY,
-                             Name VARCHAR(50) NOT NULL,
-                             Active BOOLEAN DEFAULT TRUE,
-                             Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                             Deleted_At TIMESTAMP NULL
+Id SERIAL PRIMARY KEY,
+Name VARCHAR(50) NOT NULL,
+Active BOOLEAN DEFAULT TRUE,
+Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+Deleted_At TIMESTAMP NULL
 );
 
--- 5. USERS (Removido Campus_Id daqui)
+-- 5. USERS
 CREATE TABLE Ap.Users (
-                          Id SERIAL PRIMARY KEY,
-                          Name VARCHAR(100) NOT NULL,
-                          Email VARCHAR(255) UNIQUE NOT NULL,
-                          Password_Hash VARCHAR(255) NOT NULL,
-                          Birth_Date DATE,
-                          Role_Id INTEGER NOT NULL,
-                          Active BOOLEAN DEFAULT TRUE,
-                          Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                          Deleted_At TIMESTAMP NULL,
-                          CONSTRAINT Fk_Users_Role FOREIGN KEY (Role_Id) REFERENCES Ap.Role(Id)
+Id SERIAL PRIMARY KEY,
+Name VARCHAR(100) NOT NULL,
+Email VARCHAR(255) UNIQUE NOT NULL,
+Password_Hash VARCHAR(255) NOT NULL,
+Birth_Date DATE,
+Role_Id INTEGER NOT NULL,
+Device_Token VARCHAR(255) NULL,
+Active BOOLEAN DEFAULT TRUE,
+Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+Deleted_At TIMESTAMP NULL,
+CONSTRAINT Fk_Users_Role FOREIGN KEY (Role_Id) REFERENCES Ap.Role(Id)
 );
 
 -- 6. USER_CAMPUS (A nova relação Many-to-Many)
 CREATE TABLE Ap.User_Campus (
-                                Id SERIAL PRIMARY KEY,
-                                User_Id INTEGER NOT NULL,
-                                Campus_Id INTEGER NOT NULL,
-                                Active BOOLEAN DEFAULT TRUE,
-                                Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                                Deleted_At TIMESTAMP NULL,
-                                CONSTRAINT Fk_UserCampus_User FOREIGN KEY (User_Id) REFERENCES Ap.Users(Id),
-                                CONSTRAINT Fk_UserCampus_Campus FOREIGN KEY (Campus_Id) REFERENCES Ap.Campus(Id)
+Id SERIAL PRIMARY KEY,
+User_Id INTEGER NOT NULL,
+Campus_Id INTEGER NOT NULL,
+Active BOOLEAN DEFAULT TRUE,
+Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+Deleted_At TIMESTAMP NULL,
+CONSTRAINT Fk_UserCampus_User FOREIGN KEY (User_Id) REFERENCES Ap.Users(Id),
+CONSTRAINT Fk_UserCampus_Campus FOREIGN KEY (Campus_Id) REFERENCES Ap.Campus(Id)
 );
 
 -- 7. ITEM
 CREATE TABLE Ap.Item (
-                         Id SERIAL PRIMARY KEY,
-                         Title VARCHAR(100) NOT NULL,
-                         Description TEXT,
-                         Type_Item VARCHAR(20) NOT NULL, -- Ex: 'ACHADO', 'PERDIDO'
-                         Status_Item VARCHAR(20) NOT NULL DEFAULT 'CRIADO',
-                         Meeting_Location VARCHAR(255),
-                         Posted_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                         Delivered_At TIMESTAMP NULL,
-                         Active BOOLEAN DEFAULT TRUE,
-                         Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                         Deleted_At TIMESTAMP NULL,
-                         Campus_Id INTEGER NOT NULL,
-                         Category_Id INTEGER,
-                         Author_User_Id INTEGER NOT NULL,
-                         Receiver_User_Id INTEGER,
-                         CONSTRAINT Fk_Item_Campus FOREIGN KEY (Campus_Id) REFERENCES Ap.Campus(Id),
-                         CONSTRAINT Fk_Item_Category FOREIGN KEY (Category_Id) REFERENCES Ap.Category(Id),
-                         CONSTRAINT Fk_Item_Author FOREIGN KEY (Author_User_Id) REFERENCES Ap.Users(Id),
-                         CONSTRAINT Fk_Item_Receiver FOREIGN KEY (Receiver_User_Id) REFERENCES Ap.Users(Id)
+Id SERIAL PRIMARY KEY,
+Title VARCHAR(100) NOT NULL,
+Description TEXT,
+Type_Item VARCHAR(20) NOT NULL, -- Ex: 'ACHADO', 'PERDIDO'
+Status_Item VARCHAR(20) NOT NULL DEFAULT 'CRIADO',
+Meeting_Location VARCHAR(255),
+Posted_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+Delivered_At TIMESTAMP NULL,
+Active BOOLEAN DEFAULT TRUE,
+Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+Deleted_At TIMESTAMP NULL,
+Campus_Id INTEGER NOT NULL,
+Category_Id INTEGER,
+Author_User_Id INTEGER NOT NULL,
+Receiver_User_Id INTEGER,
+CONSTRAINT Fk_Item_Campus FOREIGN KEY (Campus_Id) REFERENCES Ap.Campus(Id),
+CONSTRAINT Fk_Item_Category FOREIGN KEY (Category_Id) REFERENCES Ap.Category(Id),
+CONSTRAINT Fk_Item_Author FOREIGN KEY (Author_User_Id) REFERENCES Ap.Users(Id),
+CONSTRAINT Fk_Item_Receiver FOREIGN KEY (Receiver_User_Id) REFERENCES Ap.Users(Id)
 );
 
 -- 8. PHOTO
 CREATE TABLE Ap.Photo (
-                          Id SERIAL PRIMARY KEY,
-                          Url VARCHAR(255) NOT NULL,
-                          File_Name VARCHAR(255),
-                          Size_Bytes BIGINT,
-                          File_Type VARCHAR(50),
-                          Active BOOLEAN DEFAULT TRUE,
-                          Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                          Deleted_At TIMESTAMP NULL
+Id SERIAL PRIMARY KEY,
+Url VARCHAR(255) NOT NULL,
+File_Name VARCHAR(255),
+Size_Bytes BIGINT,
+File_Type VARCHAR(50),
+Active BOOLEAN DEFAULT TRUE,
+Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+Deleted_At TIMESTAMP NULL
 );
 
 -- 9. ITEM_PHOTO
 CREATE TABLE Ap.Item_Photo (
-                               Id SERIAL PRIMARY KEY,
-                               Item_Id INTEGER NOT NULL,
-                               Photo_Id INTEGER NOT NULL,
-                               Active BOOLEAN DEFAULT TRUE,
-                               Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                               Deleted_At TIMESTAMP NULL,
-                               CONSTRAINT Fk_ItemPhoto_Item FOREIGN KEY (Item_Id) REFERENCES Ap.Item(Id),
-                               CONSTRAINT Fk_ItemPhoto_Photo FOREIGN KEY (Photo_Id) REFERENCES Ap.Photo(Id)
+Id SERIAL PRIMARY KEY,
+Item_Id INTEGER NOT NULL,
+Photo_Id INTEGER NOT NULL,
+Active BOOLEAN DEFAULT TRUE,
+Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+Deleted_At TIMESTAMP NULL,
+CONSTRAINT Fk_ItemPhoto_Item FOREIGN KEY (Item_Id) REFERENCES Ap.Item(Id),
+CONSTRAINT Fk_ItemPhoto_Photo FOREIGN KEY (Photo_Id) REFERENCES Ap.Photo(Id)
 );
 
 -- 10. USER_PHOTO
 CREATE TABLE Ap.User_Photo (
-                               Id SERIAL PRIMARY KEY,
-                               User_Id INTEGER NOT NULL,
-                               Photo_Id INTEGER NOT NULL,
-                               Active BOOLEAN DEFAULT TRUE,
-                               Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                               Deleted_At TIMESTAMP NULL,
-                               CONSTRAINT Fk_UserPhoto_User FOREIGN KEY (User_Id) REFERENCES Ap.Users(Id),
-                               CONSTRAINT Fk_UserPhoto_Photo FOREIGN KEY (Photo_Id) REFERENCES Ap.Photo(Id)
+Id SERIAL PRIMARY KEY,
+User_Id INTEGER NOT NULL,
+Photo_Id INTEGER NOT NULL,
+Active BOOLEAN DEFAULT TRUE,
+Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+Deleted_At TIMESTAMP NULL,
+CONSTRAINT Fk_UserPhoto_User FOREIGN KEY (User_Id) REFERENCES Ap.Users(Id),
+CONSTRAINT Fk_UserPhoto_Photo FOREIGN KEY (Photo_Id) REFERENCES Ap.Photo(Id)
 );
 
 -- 11. CHAT
 CREATE TABLE Ap.Chat (
-                         Id SERIAL PRIMARY KEY,
-                         Item_Id INTEGER NOT NULL,
-                         Active BOOLEAN DEFAULT TRUE,
-                         Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                         Deleted_At TIMESTAMP NULL,
-                         CONSTRAINT Fk_Chat_Item FOREIGN KEY (Item_Id) REFERENCES Ap.Item(Id)
+Id SERIAL PRIMARY KEY,
+Item_Id INTEGER NOT NULL,
+Active BOOLEAN DEFAULT TRUE,
+Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+Deleted_At TIMESTAMP NULL,
+CONSTRAINT Fk_Chat_Item FOREIGN KEY (Item_Id) REFERENCES Ap.Item(Id)
 );
+
+-- 12. DEVICE_TOKEN
+ALTER TABLE Ap.Users
+    ADD COLUMN IF NOT EXISTS Device_Token VARCHAR(255) NULL;

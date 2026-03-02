@@ -8,6 +8,8 @@ public interface IPhotoService {
 
     String uploadItemPhoto(Integer itemId, MultipartFile file);
 
+    List<String> uploadItemPhotos(Integer itemId, List<MultipartFile> files);
+
     String uploadUserPhoto(Integer userId, MultipartFile file);
 
     void deleteItemPhoto(Integer itemId, Integer photoId);

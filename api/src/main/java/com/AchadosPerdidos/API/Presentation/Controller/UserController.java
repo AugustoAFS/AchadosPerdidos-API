@@ -94,4 +94,17 @@ public class UserController {
         usersService.deactivate(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{id}/device-token")
+    @Operation(summary = "Registrar device token para notificações", description = "Salva o Player ID do OneSignal gerado pelo Flutter. "
+            +
+            "Deve ser chamado logo após o login. " +
+            "Envie o token como texto puro no body. " +
+            "Body vazio remove o token (desabilita notificações).")
+    public ResponseEntity<Void> registerDeviceToken(
+            @Parameter(description = "ID do usuário") @PathVariable Integer id,
+            @RequestBody(required = false) String deviceToken) {
+        usersService.registerDeviceToken(id, deviceToken);
+        return ResponseEntity.noContent().build();
+    }
 }

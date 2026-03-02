@@ -4,6 +4,9 @@ import com.AchadosPerdidos.API.Application.DTOs.Request.User.LoginRequestDTO;
 import com.AchadosPerdidos.API.Application.DTOs.Request.User.RedefinirSenhaRequestDTO;
 import com.AchadosPerdidos.API.Application.DTOs.Response.Auth.OAuthUserDTO;
 import com.AchadosPerdidos.API.Application.DTOs.Response.Auth.TokenResponseDTO;
+import com.AchadosPerdidos.API.Application.Exception.BusinessException;
+import com.AchadosPerdidos.API.Application.Exception.ConflictException;
+import com.AchadosPerdidos.API.Application.Exception.ResourceNotFoundException;
 import com.AchadosPerdidos.API.Application.Interfaces.IUsersService;
 import com.AchadosPerdidos.API.Application.Interfaces.Auth.IJWTService;
 import com.AchadosPerdidos.API.Application.Interfaces.Auth.IOAuthProviderService;
@@ -11,6 +14,7 @@ import com.AchadosPerdidos.API.Domain.Entity.User_Campus;
 import com.AchadosPerdidos.API.Domain.Entity.Users;
 import com.AchadosPerdidos.API.Domain.Enum.Role_Type;
 import com.AchadosPerdidos.API.Domain.Repository.RoleRepository;
+import com.AchadosPerdidos.API.Domain.Repository.CampusRepository;
 import com.AchadosPerdidos.API.Domain.Repository.UserCampusRepository;
 import com.AchadosPerdidos.API.Domain.Repository.UsersRepository;
 import org.slf4j.Logger;
@@ -34,6 +38,9 @@ public class UsersService extends BaseService<Users, Integer, UsersRepository>
     private UserCampusRepository userCampusRepository;
 
     @Autowired
+    private CampusRepository campusRepository;
+
+    @Autowired
     private RoleRepository roleRepository;
 
     @Autowired
@@ -50,7 +57,7 @@ public class UsersService extends BaseService<Users, Integer, UsersRepository>
     @Transactional
     public Users create(Users user) {
         if (repository.existsByEmail(user.getEmail())) {
-            throw new IllegalArgumentException("E-mail já cadastrado: " + user.getEmail());
+            throw new ConflictException("E-mail já cadastrado: " + user.getEmail());
         }
         user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
         log.info("Criando usuário: {}", user.getEmail());
@@ -62,10 +69,18 @@ public class UsersService extends BaseService<Users, Integer, UsersRepository>
         Users saved = create(user);
         if (campusIds != null) {
             for (Integer campusId : campusIds) {
+                if (!campusRepository.existsById(campusId)) {
+                    throw new ResourceNotFoundException("Campus", campusId);
+                }
+                if (userCampusRepository.existsByUserIdAndCampusId(saved.getId(), campusId)) {
+                    log.warn("Vínculo duplicado ignorado: userId={} campusId={}", saved.getId(), campusId);
+                    continue;
+                }
                 User_Campus link = new User_Campus();
                 link.setUserId(saved.getId());
                 link.setCampusId(campusId);
                 userCampusRepository.save(link);
+                log.info("Vínculo criado: userId={} campusId={}", saved.getId(), campusId);
             }
         }
         return saved;
@@ -85,6 +100,11 @@ public class UsersService extends BaseService<Users, Integer, UsersRepository>
     public Users updateWithCampuses(Integer id, Users data, List<Integer> campusIds) {
         Users updated = update(id, data);
         if (campusIds != null) {
+            for (Integer campusId : campusIds) {
+                if (!campusRepository.existsById(campusId)) {
+                    throw new ResourceNotFoundException("Campus", campusId);
+                }
+            }
             List<User_Campus> currentLinks = userCampusRepository.findByUserIdAndActiveTrue(id);
             for (User_Campus link : currentLinks) {
                 link.setActive(false);
@@ -96,6 +116,7 @@ public class UsersService extends BaseService<Users, Integer, UsersRepository>
                 link.setUserId(id);
                 link.setCampusId(campusId);
                 userCampusRepository.save(link);
+                log.info("Vínculo atualizado: userId={} campusId={}", id, campusId);
             }
         }
         return updated;
@@ -149,10 +170,10 @@ public class UsersService extends BaseService<Users, Integer, UsersRepository>
     @Transactional
     public TokenResponseDTO login(LoginRequestDTO dto) {
         Users user = repository.findByEmailAndActiveTrue(dto.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("E-mail ou senha inválidos"));
+                .orElseThrow(() -> new BusinessException("E-mail ou senha inválidos"));
 
         if (!passwordEncoder.matches(dto.getPassword(), user.getPasswordHash())) {
-            throw new IllegalArgumentException("E-mail ou senha inválidos");
+            throw new BusinessException("E-mail ou senha inválidos");
         }
 
         String roleName = (user.getRoleId() != null)
@@ -179,11 +200,11 @@ public class UsersService extends BaseService<Users, Integer, UsersRepository>
     @Transactional
     public void redefinirSenha(RedefinirSenhaRequestDTO dto) {
         if (!dto.getNewPassword().equals(dto.getConfirmPassword())) {
-            throw new IllegalArgumentException("As senhas não coincidem");
+            throw new BusinessException("As senhas não coincidem");
         }
 
         Users user = repository.findByEmailAndActiveTrue(dto.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado com o e-mail informado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado com o e-mail informado"));
 
         user.setPasswordHash(passwordEncoder.encode(dto.getNewPassword()));
         repository.save(user);
@@ -223,5 +244,21 @@ public class UsersService extends BaseService<Users, Integer, UsersRepository>
 
         log.info("Login com Google bem-sucedido para: {}", user.getEmail());
         return response;
+    }
+
+    /**
+     * Registra ou atualiza o Device Token do OneSignal para o usuário.
+     * Chamado pelo Flutter logo após o login, ao obter o Player ID do OneSignal
+     * SDK.
+     * Passar null ou string vazia remove o token (usuário desabilitou
+     * notificações).
+     */
+    @Transactional
+    public void registerDeviceToken(Integer userId, String deviceToken) {
+        Users user = findById(userId);
+        String tokenToSave = (deviceToken == null || deviceToken.isBlank()) ? null : deviceToken.trim();
+        user.setDeviceToken(tokenToSave);
+        repository.save(user);
+        log.info("Device token {} para userId={}", tokenToSave == null ? "removido" : "registrado", userId);
     }
 }
