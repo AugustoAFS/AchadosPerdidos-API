@@ -8,7 +8,7 @@ import com.AchadosPerdidos.API.Domain.Entity.User_Photo;
 import com.AchadosPerdidos.API.Domain.Repository.ItemPhotoRepository;
 import com.AchadosPerdidos.API.Domain.Repository.PhotoRepository;
 import com.AchadosPerdidos.API.Domain.Repository.UserPhotoRepository;
-import jakarta.persistence.EntityNotFoundException;
+import com.AchadosPerdidos.API.Application.Exception.StorageException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +55,22 @@ public class PhotoService implements IPhotoService {
 
         log.info("Foto de item salva: itemId={} | photoId={} | key={}", itemId, saved.getId(), s3Key);
         return url;
+    }
+
+    @Override
+    @Transactional
+    public List<String> uploadItemPhotos(Integer itemId, List<MultipartFile> files) {
+        List<String> urls = new java.util.ArrayList<>();
+        for (MultipartFile file : files) {
+            if (file == null || file.isEmpty()) {
+                log.warn("Arquivo vazio ignorado no upload de itemId={}", itemId);
+                continue;
+            }
+            String url = uploadItemPhoto(itemId, file);
+            urls.add(url);
+        }
+        log.info("Total de {} foto(s) salva(s) para itemId={}", urls.size(), itemId);
+        return urls;
     }
 
     @Override
@@ -136,7 +152,7 @@ public class PhotoService implements IPhotoService {
                     file.getContentType(),
                     folder);
         } catch (IOException e) {
-            throw new RuntimeException("Falha ao ler arquivo para upload: " + e.getMessage(), e);
+            throw new StorageException("Falha ao processar o arquivo para upload: " + e.getMessage(), e);
         }
     }
 
