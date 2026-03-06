@@ -3,13 +3,18 @@ package com.AchadosPerdidos.API.Application.Mapper;
 import com.AchadosPerdidos.API.Application.DTOs.Request.Item.CreateItemRequestDTO;
 import com.AchadosPerdidos.API.Application.DTOs.Request.Item.UpdateItemRequestDTO;
 import com.AchadosPerdidos.API.Application.DTOs.Response.Item.ItemResponseDTO;
+import com.AchadosPerdidos.API.Application.Interfaces.IPhotoService;
 import com.AchadosPerdidos.API.Domain.Entity.Item;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
 public class ItemMapper {
+
+    @Autowired
+    private IPhotoService photoService;
 
     public ItemResponseDTO toResponse(Item item) {
         if (item == null)
@@ -28,6 +33,10 @@ public class ItemMapper {
         dto.setCategoryId(item.getCategoryId());
         dto.setAuthorUserId(item.getAuthorUserId());
         dto.setReceiverUserId(item.getReceiverUserId());
+        // Popula as URLs das fotos automaticamente
+        if (item.getId() != null) {
+            dto.setPhotoUrls(photoService.getItemPhotoUrls(item.getId()));
+        }
         return dto;
     }
 
