@@ -110,10 +110,11 @@
             <version>3.0.0</version>
         </dependency>
 
-        <!-- AWS SDK -->
+        <!-- Cloudinary -->
         <dependency>
-            <groupId>software.amazon.awssdk</groupId>
-            <artifactId>s3</artifactId>
+            <groupId>com.cloudinary</groupId>
+            <artifactId>cloudinary-http44</artifactId>
+            <version>1.36.0</version>
         </dependency>
 
         <!-- Cache Caffeine -->
@@ -177,13 +178,7 @@
                 <version>3.42.0</version>
             </dependency>
 
-            <dependency>
-                <groupId>software.amazon.awssdk</groupId>
-                <artifactId>bom</artifactId>
-                <version>${aws-sdk.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
+
 
             <dependency>
                 <groupId>ch.qos.logback</groupId>

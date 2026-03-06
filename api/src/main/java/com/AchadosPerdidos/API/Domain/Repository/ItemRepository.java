@@ -22,26 +22,34 @@ public interface ItemRepository extends BaseRepository<Item, Integer>, IItemRepo
 
         String QUERY_SEARCH_BY_TERMO = "SELECT i FROM Item i"
                         + " WHERE i.active = true"
+                        + "   AND i.statusItem != 'ENTREGUE'"
                         + "   AND (LOWER(i.title) LIKE LOWER(CONCAT('%', :termo, '%'))"
-                        + "     OR LOWER(i.description) LIKE LOWER(CONCAT('%', :termo, '%')))";
+                        + "     OR LOWER(i.description) LIKE LOWER(CONCAT('%', :termo, '%')))"
+                        + " ORDER BY i.postedAt DESC";
 
         @Override
-        List<Item> findByStatusItemAndActiveTrue(Status_Item statusItem);
+        @Query("SELECT i FROM Item i WHERE i.statusItem = :statusItem AND i.active = true ORDER BY i.postedAt DESC")
+        List<Item> findByStatusItemAndActiveTrue(@Param("statusItem") Status_Item statusItem);
 
         @Override
-        List<Item> findByTypeItemAndActiveTrue(Type_Item typeItem);
+        @Query("SELECT i FROM Item i WHERE i.typeItem = :typeItem AND i.statusItem != 'ENTREGUE' AND i.active = true ORDER BY i.postedAt DESC")
+        List<Item> findByTypeItemAndActiveTrue(@Param("typeItem") Type_Item typeItem);
 
         @Override
-        List<Item> findByCampusIdAndActiveTrue(Integer campusId);
+        @Query("SELECT i FROM Item i WHERE i.campusId = :campusId AND i.statusItem != 'ENTREGUE' AND i.active = true ORDER BY i.postedAt DESC")
+        List<Item> findByCampusIdAndActiveTrue(@Param("campusId") Integer campusId);
 
         @Override
-        List<Item> findByCategoryIdAndActiveTrue(Integer categoryId);
+        @Query("SELECT i FROM Item i WHERE i.categoryId = :categoryId AND i.statusItem != 'ENTREGUE' AND i.active = true ORDER BY i.postedAt DESC")
+        List<Item> findByCategoryIdAndActiveTrue(@Param("categoryId") Integer categoryId);
 
         @Override
-        List<Item> findByAuthorUserIdAndActiveTrue(Integer authorUserId);
+        @Query("SELECT i FROM Item i WHERE i.authorUserId = :authorUserId AND i.active = true ORDER BY i.postedAt DESC")
+        List<Item> findByAuthorUserIdAndActiveTrue(@Param("authorUserId") Integer authorUserId);
 
         @Override
-        List<Item> findByReceiverUserIdAndActiveTrue(Integer receiverUserId);
+        @Query("SELECT i FROM Item i WHERE i.receiverUserId = :receiverUserId AND i.active = true ORDER BY i.postedAt DESC")
+        List<Item> findByReceiverUserIdAndActiveTrue(@Param("receiverUserId") Integer receiverUserId);
 
         @Override
         @Query(QUERY_FIND_ACTIVE_BY_CAMPUS_AND_STATUS)

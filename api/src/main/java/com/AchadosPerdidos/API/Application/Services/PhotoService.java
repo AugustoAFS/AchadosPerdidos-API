@@ -9,6 +9,9 @@ import com.AchadosPerdidos.API.Domain.Repository.ItemPhotoRepository;
 import com.AchadosPerdidos.API.Domain.Repository.PhotoRepository;
 import com.AchadosPerdidos.API.Domain.Repository.UserPhotoRepository;
 import com.AchadosPerdidos.API.Application.Exception.StorageException;
+import com.AchadosPerdidos.API.Domain.Entity.Item;
+import com.AchadosPerdidos.API.Domain.Enum.Type_Item;
+import com.AchadosPerdidos.API.Domain.Repository.ItemRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,10 +42,18 @@ public class PhotoService implements IPhotoService {
     @Autowired
     private UserPhotoRepository userPhotoRepository;
 
+    @Autowired
+    private ItemRepository itemRepository;
+
     @Override
     @Transactional
     public String uploadItemPhoto(Integer itemId, MultipartFile file) {
-        String s3Key = doUpload(file, FOLDER_ITEMS);
+        String folderName = FOLDER_ITEMS;
+        Item item = itemRepository.findById(itemId).orElse(null);
+        if (item != null && item.getTypeItem() != null) {
+            folderName = item.getTypeItem() == Type_Item.FIND ? "itens_achados" : "itens_perdidos";
+        }
+        String s3Key = doUpload(file, folderName);
         String url = storageService.generateSignedUrl(s3Key);
 
         Photo photo = buildPhoto(url, file);
