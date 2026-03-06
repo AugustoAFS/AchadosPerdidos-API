@@ -7,6 +7,8 @@ import com.AchadosPerdidos.API.Domain.Enum.Type_Item;
 import com.AchadosPerdidos.API.Domain.Repository.ItemRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,9 +28,16 @@ public class ItemService extends BaseService<Item, Integer, ItemRepository>
     @Override
     @Transactional
     public Item create(Item item) {
+        // Seta o autor a partir do usuário autenticado (userId guardado como
+        // credentials no JWT filter)
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getCredentials() != null) {
+            item.setAuthorUserId(Integer.valueOf(auth.getCredentials().toString()));
+        }
+
         item.setPostedAt(LocalDateTime.now());
         item.setStatusItem(Status_Item.PERDIDO);
-        log.info("Criando item: {}", item.getTitle());
+        log.info("Criando item: {} (author={})", item.getTitle(), item.getAuthorUserId());
         return repository.save(item);
     }
 

@@ -22,7 +22,7 @@ public class PhotoController {
     private IPhotoService photoService;
 
     @PostMapping("/items/{itemId}")
-    @Operation(summary = "Upload de foto de item", description = "Envia uma imagem para o S3 e associa ao item")
+    @Operation(summary = "Upload de foto de item", description = "Envia uma imagem para o Cloudinary e associa ao item")
     public ResponseEntity<String> uploadItemPhoto(
             @Parameter(description = "ID do item") @PathVariable Integer itemId,
             @Parameter(description = "Arquivo de imagem") @RequestParam("file") MultipartFile file) {
@@ -38,7 +38,7 @@ public class PhotoController {
     }
 
     @DeleteMapping("/items/{itemId}/{photoId}")
-    @Operation(summary = "Remover foto de item", description = "Remove a foto do S3 e desfaz a associação com o item")
+    @Operation(summary = "Remover foto de item", description = "Remove a foto do Cloudinary e desfaz a associação com o item")
     public ResponseEntity<Void> deleteItemPhoto(
             @Parameter(description = "ID do item") @PathVariable Integer itemId,
             @Parameter(description = "ID da foto") @PathVariable Integer photoId) {
