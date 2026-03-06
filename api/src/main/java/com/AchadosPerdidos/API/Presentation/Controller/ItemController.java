@@ -91,7 +91,6 @@ public class ItemController {
         }
 
         ItemResponseDTO response = itemMapper.toResponse(saved);
-        response.setPhotoUrls(photoService.getItemPhotoUrls(saved.getId()));
 
         // Notifica usuários do campus sobre o novo item (assíncrono — não bloqueia a
         // resposta)
@@ -104,15 +103,7 @@ public class ItemController {
     @Operation(summary = "Buscar item por ID", description = "Retorna o item com suas URLs de fotos incluídas")
     public ResponseEntity<ItemResponseDTO> findById(
             @Parameter(description = "ID do item") @PathVariable Integer id) {
-        return ResponseEntity.ok(withPhotos(itemMapper.toResponse(itemService.findById(id))));
-    }
-
-    /** Popula photoUrls no DTO a partir do serviço de fotos. */
-    private ItemResponseDTO withPhotos(ItemResponseDTO dto) {
-        if (dto != null && dto.getId() != null) {
-            dto.setPhotoUrls(photoService.getItemPhotoUrls(dto.getId()));
-        }
-        return dto;
+        return ResponseEntity.ok(itemMapper.toResponse(itemService.findById(id)));
     }
 
     @GetMapping
