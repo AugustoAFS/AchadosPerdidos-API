@@ -67,7 +67,7 @@ public class ItemService extends BaseService<Item, Integer, ItemRepository>
     @Override
     @Transactional(readOnly = true)
     public List<Item> findByCampus(Integer campusId) {
-        return repository.findByCampusIdAndActiveTrue(campusId);
+        return excludeEntregue(repository.findByCampusIdAndActiveTrue(campusId));
     }
 
     @Override
@@ -79,13 +79,13 @@ public class ItemService extends BaseService<Item, Integer, ItemRepository>
     @Override
     @Transactional(readOnly = true)
     public List<Item> findByType(Type_Item type) {
-        return repository.findByTypeItemAndActiveTrue(type);
+        return excludeEntregue(repository.findByTypeItemAndActiveTrue(type));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Item> findByCategory(Integer categoryId) {
-        return repository.findByCategoryIdAndActiveTrue(categoryId);
+        return excludeEntregue(repository.findByCategoryIdAndActiveTrue(categoryId));
     }
 
     @Override
@@ -103,7 +103,14 @@ public class ItemService extends BaseService<Item, Integer, ItemRepository>
     @Override
     @Transactional(readOnly = true)
     public List<Item> search(String termo) {
-        return repository.searchByTermo(termo);
+        return excludeEntregue(repository.searchByTermo(termo));
+    }
+
+    /** Remove itens com status ENTREGUE das listagens públicas. */
+    private List<Item> excludeEntregue(List<Item> items) {
+        return items.stream()
+                .filter(i -> i.getStatusItem() != Status_Item.ENTREGUE)
+                .toList();
     }
 
     @Override

@@ -116,12 +116,9 @@ public class ItemController {
     }
 
     @GetMapping
-    @Operation(summary = "Listar todos os itens ativos (exceto entregues)")
+    @Operation(summary = "Listar todos os itens ativos")
     public ResponseEntity<List<ItemResponseDTO>> findAll() {
-        List<Item> items = itemService.findAll().stream()
-                .filter(i -> i.getStatusItem() != Status_Item.ENTREGUE)
-                .toList();
-        return ResponseEntity.ok(itemMapper.toResponseList(items));
+        return ResponseEntity.ok(itemMapper.toResponseList(itemService.findAll()));
     }
 
     @GetMapping("/campus/{campusId}")
